@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>JanSeva | Smart Grievance</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+
+        <div class="logo">
+            <div class="logo-box">JS</div>
+
+            <div>
+                <h2>JanSeva</h2>
+                <p>Smart Grievance</p>
+            </div>
+        </div>
+
+        <nav>
+            <button class="nav-btn active" data-page="home">Home</button>
+            <button class="nav-btn" data-page="complaints">My Complaints</button>
+            <button class="nav-btn" data-page="admin">Admin</button>
+        </nav>
+
+        <div class="user">
+            <div class="avatar">A</div>
+            <span>Aditya</span>
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+    <main>
+
+        <!-- ================= HOME ================= -->
+
+        <section id="home" class="page active">
+
+            <div class="welcome">
+
+                <div>
+                    <span class="small-title">CITIZEN PORTAL</span>
+
+                    <h1>
+                        Report a problem.
+                        <br>
+                        Let the system handle the rest.
+                    </h1>
+
+                    <p>
+                        Report local issues and let AI identify the category,
+                        priority and responsible department.
+                    </p>
+                </div>
+
+                <div class="welcome-number">
+                    <span>YOUR REPORTS</span>
+                    <strong id="totalReports">3</strong>
+                </div>
+
+            </div>
+
+
+            <div class="home-grid">
+
+                <!-- REPORT FORM -->
+                <div class="card report-card">
+
+                    <div class="card-heading">
+                        <div>
+                            <span class="section-label">01</span>
+                            <h2>Report an Issue</h2>
+                        </div>
+
+                        <span class="ai-status">
+                            <span></span>
+                            AI READY
+                        </span>
+                    </div>
+
+
+                    <form id="complaintForm">
+
+                        <div class="input-group">
+
+                            <label>Problem Title</label>
+
+                            <input
+                                type="text"
+                                id="title"
+                                placeholder="Example: Garbage near school"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="input-group">
+
+                            <label>Describe the Problem</label>
+
+                            <textarea
+                                id="description"
+                                rows="5"
+                                placeholder="Explain the problem..."
+                                required
+                            ></textarea>
+
+                        </div>
+
+
+                        <div class="two-inputs">
+
+                            <div class="input-group">
+
+                                <label>Location</label>
+
+                                <input
+                                    type="text"
+                                    id="location"
+                                    placeholder="Village / Landmark"
+                                >
+
+                            </div>
+
+
+                            <div class="input-group">
+
+                                <label>People Affected</label>
+
+                                <input
+                                    type="number"
+                                    id="affected"
+                                    placeholder="10"
+                                    min="1"
+                                    value="10"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="input-group">
+
+                            <label>Upload Photo</label>
+
+                            <div class="file-box">
+
+                                <input
+                                    type="file"
+                                    id="photo"
+                                    accept="image/*"
+                                >
+
+                                <span id="fileText">
+                                    + Add evidence photo
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <button type="submit" class="main-btn">
+                            Analyze Complaint
+                            <span>→</span>
+                        </button>
+
+                    </form>
+
+
+                    <!-- AI RESULT -->
+                    <div id="aiResult" class="ai-result hidden">
+
+                        <div class="ai-result-top">
+
+                            <div>
+                                <span class="section-label">AI ANALYSIS</span>
+                                <h3>Complaint analyzed</h3>
+                            </div>
+
+                            <span class="confidence">
+                                94% confidence
+                            </span>
+
+                        </div>
+
+
+                        <div class="result-grid">
+
+                            <div>
+                                <span>Category</span>
+                                <strong id="resultCategory">
+                                    —
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Department</span>
+                                <strong id="resultDepartment">
+                                    —
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Priority</span>
+                                <strong id="resultPriority">
+                                    —
+                                </strong>
+                            </div>
+
+                        </div>
+
+
+                        <div class="submit-final">
+
+                            <span id="complaintId">
+                                Complaint ID: —
+                            </span>
+
+                            <button id="finalSubmit">
+                                Submit Complaint
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RIGHT SIDE -->
+                <div class="side-area">
+
+                    <!-- QUICK INFO -->
+                    <div class="card smart-card">
+
+                        <span class="section-label">HOW IT WORKS</span>
+
+                        <div class="process">
+
+                            <div class="process-item">
+
+                                <div class="process-number">01</div>
+
+                                <div>
+                                    <strong>Report</strong>
+                                    <p>You submit the issue.</p>
+                                </div>
+
+                            </div>
+
+
+                            <div class="line"></div>
+
+
+                            <div class="process-item">
+
+                                <div class="process-number">02</div>
+
+                                <div>
+                                    <strong>AI Analysis</strong>
+                                    <p>System identifies priority & department.</p>
+                                </div>
+
+                            </div>
+
+
+                            <div class="line"></div>
+
+
+                            <div class="process-item">
+
+                                <div class="process-number">03</div>
+
+                                <div>
+                                    <strong>Resolution</strong>
+                                    <p>Officer assigns a field worker.</p>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACTIVE COMPLAINT -->
+                    <div class="card active-card">
+
+                        <div class="card-heading">
+
+                            <div>
+                                <span class="section-label">LATEST</span>
+                                <h2>GRV-2026-001</h2>
+                            </div>
+
+                            <span class="priority high">
+                                HIGH
+                            </span>
+
+                        </div>
+
+
+                        <h3>
+                            Garbage near primary school
+                        </h3>
+
+                        <p class="muted">
+                            Village ABC
+                        </p>
+
+
+                        <div class="mini-status">
+
+                            <div class="status-step done">
+                                <span></span>
+                                Submitted
+                            </div>
+
+                            <div class="status-step done">
+                                <span></span>
+                                Verified
+                            </div>
+
+                            <div class="status-step current">
+                                <span></span>
+                                In Progress
+                            </div>
+
+                            <div class="status-step">
+                                <span></span>
+                                Resolved
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            class="outline-btn"
+                            data-page="complaints"
+                        >
+                            Track Complaint
+                            →
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ================= COMPLAINTS ================= -->
+
+        <section id="complaints" class="page">
+
+            <div class="page-heading">
+
+                <div>
+                    <span class="small-title">CITIZEN PORTAL</span>
+
+                    <h1>My Complaints</h1>
+
+                    <p>
+                        Track every issue you have reported.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div id="complaintList" class="complaint-list">
+
+                <!-- JS WILL INSERT COMPLAINTS -->
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ================= ADMIN ================= -->
+
+        <section id="admin" class="page">
+
+            <div class="page-heading">
+
+                <div>
+
+                    <span class="small-title">
+                        ADMIN CONTROL
+                    </span>
+
+                    <h1>Grievance Dashboard</h1>
+
+                    <p>
+                        Monitor complaints and department activity.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- STATS -->
+
+            <div class="stats">
+
+                <div class="stat">
+                    <span>Total</span>
+                    <strong id="adminTotal">0</strong>
+                </div>
+
+                <div class="stat">
+                    <span>Pending</span>
+                    <strong id="adminPending">0</strong>
+                </div>
+
+                <div class="stat">
+                    <span>In Progress</span>
+                    <strong id="adminProgress">0</strong>
+                </div>
+
+                <div class="stat">
+                    <span>Resolved</span>
+                    <strong id="adminResolved">0</strong>
+                </div>
+
+            </div>
+
+
+            <!-- COMPLAINT TABLE -->
+
+            <div class="card admin-card">
+
+                <div class="card-heading">
+
+                    <div>
+                        <span class="section-label">COMPLAINT QUEUE</span>
+                        <h2>Recent Reports</h2>
+                    </div>
+
+                    <select id="statusFilter">
+
+                        <option value="ALL">
+                            All
+                        </option>
+
+                        <option value="SUBMITTED">
+                            Submitted
+                        </option>
+
+                        <option value="VERIFIED">
+                            Verified
+                        </option>
+
+                        <option value="IN_PROGRESS">
+                            In Progress
+                        </option>
+
+                        <option value="RESOLVED">
+                            Resolved
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div id="adminComplaints">
+
+                    <!-- JS -->
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <div id="toast"></div>
+
+
+    <script src="app.js"></script>
+
+</body>
+</html>
