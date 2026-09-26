@@ -1,18 +1,28 @@
 // ==========================================
 // CODO SLAYER - FRONTEND
 // ==========================================
+
 const API_URL = "https://codo-slayer.onrender.com";
+
 let complaints = [];
+let tempComplaint = null;
+
+
 // ==========================================
 // PAGE NAVIGATION
 // ==========================================
+
 document.querySelectorAll("[data-page]").forEach(button => {
+
     button.addEventListener("click", () => {
-        openPage(
-            button.dataset.page
-        );
+
+        openPage(button.dataset.page);
+
     });
+
 });
+
+
 function openPage(pageName) {
 
     document
@@ -24,60 +34,112 @@ function openPage(pageName) {
         });
 
 
-    const page = document.getElementById(
-        pageName
-    );
+    const page = document.getElementById(pageName);
+
     if (page) {
+
         page.classList.add("active");
+
     }
+
+
     document
         .querySelectorAll(".nav-btn")
         .forEach(button => {
+
             button.classList.remove("active");
-            if (
-                button.dataset.page
-                === pageName
-            ) {
+
+            if (button.dataset.page === pageName) {
+
                 button.classList.add("active");
+
             }
+
         });
+
+
     if (pageName === "complaints") {
+
         renderComplaints();
+
     }
+
+
     if (pageName === "admin") {
-        checkAdminPage();
+
+        loadAdminAnalytics();
+
+        renderAdminComplaints();
+
     }
+
 }
+
+
 // ==========================================
 // TOAST
 // ==========================================
+
 function showToast(message) {
+
     const toast =
         document.getElementById("toast");
+
+    if (!toast) {
+        return;
+    }
+
     toast.textContent = message;
+
     toast.classList.add("show");
+
+
     setTimeout(() => {
+
         toast.classList.remove("show");
+
     }, 2500);
+
 }
+
+
 // ==========================================
 // API HELPER
 // ==========================================
+
 async function apiRequest(
     url,
     options = {}
 ) {
+
     try {
+
         const response = await fetch(
             API_URL + url,
             options
         );
-        const data =
-            await response.json();
+
+
+        let data = {};
+
+        try {
+
+            data = await response.json();
+
+        }
+        catch (error) {
+
+            data = {};
+
+        }
+
+
         if (!response.ok) {
+
             throw new Error(
-                data.detail
-                || "Request failed"
+                data.detail ||
+                data.message ||
+                "Request failed"
             );
 
         }
@@ -88,8 +150,14 @@ async function apiRequest(
     }
     catch (error) {
 
+        console.error(
+            "API Error:",
+            error
+        );
+
         showToast(
-            error.message
+            error.message ||
+            "Something went wrong"
         );
 
         throw error;
@@ -97,7 +165,6 @@ async function apiRequest(
     }
 
 }
-
 
 
 // ==========================================
@@ -115,7 +182,7 @@ async function loadComplaints() {
 
 
         complaints =
-            data.complaints;
+            data.complaints || [];
 
 
         updateHome();
@@ -124,19 +191,21 @@ async function loadComplaints() {
 
         renderRecentComplaints();
 
-        loadAdminAnalytics();
-
         renderAdminComplaints();
+
+        loadAdminAnalytics();
 
     }
     catch (error) {
 
-        console.error(error);
+        console.error(
+            "Load complaints error:",
+            error
+        );
 
     }
 
 }
-
 
 
 // ==========================================
@@ -151,47 +220,80 @@ function updateHome() {
 
     const pending =
         complaints.filter(
-            c =>
-                c.status === "SUBMITTED"
+            complaint =>
+                complaint.status === "SUBMITTED"
                 ||
-                c.status === "VERIFIED"
+                complaint.status === "VERIFIED"
         ).length;
 
 
     const progress =
         complaints.filter(
-            c =>
-                c.status === "IN_PROGRESS"
+            complaint =>
+                complaint.status === "IN_PROGRESS"
         ).length;
 
 
     const resolved =
         complaints.filter(
-            c =>
-                c.status === "RESOLVED"
+            complaint =>
+                complaint.status === "RESOLVED"
                 ||
-                c.status === "CLOSED"
+                complaint.status === "CLOSED"
         ).length;
 
 
-    document.getElementById(
-        "totalReports"
-    ).textContent = total;
+    const totalReports =
+        document.getElementById(
+            "totalReports"
+        );
+
+    const homePending =
+        document.getElementById(
+            "homePending"
+        );
+
+    const homeProgress =
+        document.getElementById(
+            "homeProgress"
+        );
+
+    const homeResolved =
+        document.getElementById(
+            "homeResolved"
+        );
 
 
-    document.getElementById(
-        "homePending"
-    ).textContent = pending;
+    if (totalReports) {
+
+        totalReports.textContent =
+            total;
+
+    }
 
 
-    document.getElementById(
-        "homeProgress"
-    ).textContent = progress;
+    if (homePending) {
+
+        homePending.textContent =
+            pending;
+
+    }
 
 
-    document.getElementById(
-        "homeResolved"
-    ).textContent = resolved;
+    if (homeProgress) {
+
+        homeProgress.textContent =
+            progress;
+
+    }
+
+
+    if (homeResolved) {
+
+        homeResolved.textContent =
+            resolved;
+
+    }
 
 
     renderPriorityOverview();
@@ -199,7 +301,6 @@ function updateHome() {
     renderCategoryOverview();
 
 }
-
 
 
 // ==========================================
@@ -214,6 +315,11 @@ function renderPriorityOverview() {
         );
 
 
+    if (!container) {
+        return;
+    }
+
+
     const priorities = [
         "CRITICAL",
         "HIGH",
@@ -223,13 +329,13 @@ function renderPriorityOverview() {
 
 
     container.innerHTML =
-        priorities.map(priority => {
+        priorities
+        .map(priority => {
 
             const count =
                 complaints.filter(
-                    c =>
-                        c.priority
-                        === priority
+                    complaint =>
+                        complaint.priority === priority
                 ).length;
 
 
@@ -249,10 +355,10 @@ function renderPriorityOverview() {
 
             `;
 
-        }).join("");
+        })
+        .join("");
 
 }
-
 
 
 // ==========================================
@@ -267,18 +373,29 @@ function renderCategoryOverview() {
         );
 
 
+    if (!container) {
+        return;
+    }
+
+
     const counts = {};
 
 
-    complaints.forEach(c => {
+    complaints.forEach(complaint => {
 
-        if (!counts[c.category]) {
+        const category =
+            complaint.category ||
+            "Unknown";
 
-            counts[c.category] = 0;
+
+        if (!counts[category]) {
+
+            counts[category] = 0;
 
         }
 
-        counts[c.category]++;
+
+        counts[category]++;
 
     });
 
@@ -289,22 +406,31 @@ function renderCategoryOverview() {
 
     if (entries.length === 0) {
 
-        container.innerHTML =
-            `<div class="metric-item">
-                <span>No data</span>
-            </div>`;
+        container.innerHTML = `
+
+            <div class="metric-item">
+
+                <span>
+                    No data
+                </span>
+
+            </div>
+
+        `;
 
         return;
 
     }
 
 
+    entries.sort(
+        (a, b) =>
+            b[1] - a[1]
+    );
+
+
     container.innerHTML =
         entries
-        .sort(
-            (a, b) =>
-                b[1] - a[1]
-        )
         .map(item => {
 
             return `
@@ -323,10 +449,10 @@ function renderCategoryOverview() {
 
             `;
 
-        }).join("");
+        })
+        .join("");
 
 }
-
 
 
 // ==========================================
@@ -341,16 +467,26 @@ function renderRecentComplaints() {
         );
 
 
+    if (!container) {
+        return;
+    }
+
+
     const recent =
         complaints.slice(0, 5);
 
 
     if (recent.length === 0) {
 
-        container.innerHTML =
-            `<div class="complaint-item">
+        container.innerHTML = `
+
+            <div class="complaint-item">
+
                 No complaints yet.
-            </div>`;
+
+            </div>
+
+        `;
 
         return;
 
@@ -358,24 +494,20 @@ function renderRecentComplaints() {
 
 
     container.innerHTML =
-        recent.map(
-            complaint =>
-                complaintCard(
-                    complaint
-                )
-        ).join("");
+        recent
+        .map(complaint =>
+            complaintCard(complaint)
+        )
+        .join("");
 
 }
-
 
 
 // ==========================================
 // COMPLAINT CARD
 // ==========================================
 
-function complaintCard(
-    complaint
-) {
+function complaintCard(complaint) {
 
     return `
 
@@ -384,34 +516,41 @@ function complaintCard(
             <div>
 
                 <h3>
+
                     ${escapeHTML(
-                        complaint.title
+                        complaint.title ||
+                        "Untitled Complaint"
                     )}
+
                 </h3>
+
 
                 <div class="complaint-meta">
 
                     ${escapeHTML(
-                        complaint.id
+                        complaint.id ||
+                        ""
                     )}
 
                     ·
 
                     ${escapeHTML(
-                        complaint.category
+                        complaint.category ||
+                        "Unknown"
                     )}
 
                     <br>
 
                     ${escapeHTML(
-                        complaint.department
+                        complaint.department ||
+                        "Unknown Department"
                     )}
 
                     ·
 
                     ${escapeHTML(
-                        complaint.location
-                        || "Location not provided"
+                        complaint.location ||
+                        "Location not provided"
                     )}
 
                 </div>
@@ -421,12 +560,16 @@ function complaintCard(
 
             <div class="badges">
 
-                <span class="priority ${String(
-                    complaint.priority
-                ).toLowerCase()}">
+                <span
+                    class="priority ${String(
+                        complaint.priority ||
+                        "LOW"
+                    ).toLowerCase()}"
+                >
 
                     ${escapeHTML(
-                        complaint.priority
+                        complaint.priority ||
+                        "LOW"
                     )}
 
                 </span>
@@ -435,7 +578,8 @@ function complaintCard(
                 <span class="status-badge">
 
                     ${formatStatus(
-                        complaint.status
+                        complaint.status ||
+                        "SUBMITTED"
                     )}
 
                 </span>
@@ -449,14 +593,19 @@ function complaintCard(
 }
 
 
-
 // ==========================================
 // REPORT COMPLAINT
 // ==========================================
 
-document
-    .getElementById("complaintForm")
-    .addEventListener(
+const complaintForm =
+    document.getElementById(
+        "complaintForm"
+    );
+
+
+if (complaintForm) {
+
+    complaintForm.addEventListener(
         "submit",
         async function(event) {
 
@@ -489,7 +638,7 @@ document
                     document
                         .getElementById("affected")
                         .value
-                );
+                ) || 1;
 
 
             if (!title || !description) {
@@ -503,172 +652,153 @@ document
             }
 
 
+            const button =
+                this.querySelector(
+                    "button[type='submit']"
+                );
+
+
+            button.disabled = true;
+
+            button.textContent =
+                "Analyzing...";
+
+
             try {
 
-                const analysis =
+                const data =
                     await apiRequest(
                         "/complaints/analyze",
                         {
+
                             method: "POST",
 
                             headers: {
+
                                 "Content-Type":
                                     "application/json"
+
                             },
 
-                            body: JSON.stringify({
-                                title,
-                                description,
-                                affected
-                            })
+                            body:
+                                JSON.stringify({
+
+                                    title,
+
+                                    description,
+
+                                    location,
+
+                                    affected
+
+                                })
+
                         }
                     );
 
 
+                // ==================================
+                // AI RESPONSE
+                // ==================================
+
+                const result =
+                    data.analysis?.analysis
+                    ||
+                    data.analysis
+                    ||
+                    data;
+
+
+                console.log(
+                    "AI Analysis Response:",
+                    data
+                );
+
+
+                document.getElementById(
+                    "resultCategory"
+                ).textContent =
+                    result.category ||
+                    "Unknown";
+
+
+                document.getElementById(
+                    "resultDepartment"
+                ).textContent =
+                    result.department ||
+                    "Unknown";
+
+
+                document.getElementById(
+                    "resultPriority"
+                ).textContent =
+                    result.priority ||
+                    "LOW";
+
+
+                document.getElementById(
+                    "resultConfidence"
+                ).textContent =
+                    (result.confidence ?? 0)
+                    + "%";
+
+
+                document.getElementById(
+                    "complaintId"
+                ).textContent =
+                    "Ready to submit";
+
+
+                tempComplaint = {
+
+                    title,
+
+                    description,
+
+                    location,
+
+                    affected
+
+                };
+
+
+                window.tempComplaint =
+                    tempComplaint;
+
+
+                document
+                    .getElementById("aiResult")
+                    .classList.remove(
+                        "hidden"
+                    );
+
+
                 showToast(
-                    "Complaint analyzed successfully"
+                    "AI analysis completed"
                 );
-
-
-                showAnalysisResult(
-                    analysis
-                );
-
 
             }
             catch (error) {
 
-                console.error(error);
+                console.error(
+                    "AI Analysis Error:",
+                    error
+                );
+
+            }
+            finally {
+
+                button.disabled = false;
+
+                button.textContent =
+                    "Analyze Complaint";
 
             }
 
         }
     );
 
-
-
-// ==========================================
-// SHOW AI ANALYSIS RESULT
-// ==========================================
-
-function showAnalysisResult(
-    analysis
-) {
-
-    const result =
-        document.getElementById(
-            "aiResult"
-        );
-
-
-    const category =
-        document.getElementById(
-            "resultCategory"
-        );
-
-
-    const department =
-        document.getElementById(
-            "resultDepartment"
-        );
-
-
-    const priority =
-        document.getElementById(
-            "resultPriority"
-        );
-
-
-    const confidence =
-        document.getElementById(
-            "resultConfidence"
-        );
-
-
-    if (category) {
-
-        category.textContent =
-            analysis.category;
-
-    }
-
-
-    if (department) {
-
-        department.textContent =
-            analysis.department;
-
-    }
-
-
-    if (priority) {
-
-        priority.textContent =
-            analysis.priority;
-
-    }
-
-
-    if (confidence) {
-
-        confidence.textContent =
-            analysis.confidence + "%";
-
-    }
-
-
-    if (result) {
-
-        result.classList.remove(
-            "hidden"
-        );
-
-    }
-
-
-    window.tempComplaint = {
-
-        title:
-            document
-                .getElementById("title")
-                .value
-                .trim(),
-
-        description:
-            document
-                .getElementById("description")
-                .value
-                .trim(),
-
-        location:
-            document
-                .getElementById("location")
-                .value
-                .trim(),
-
-        affected:
-            Number(
-                document
-                    .getElementById("affected")
-                    .value
-            ),
-
-        category:
-            analysis.category,
-
-        department:
-            analysis.department,
-
-        priority:
-            analysis.priority,
-
-        confidence:
-            analysis.confidence
-
-    };
-
 }
-
 
 
 // ==========================================
@@ -685,17 +815,23 @@ if (finalSubmit) {
 
     finalSubmit.addEventListener(
         "click",
-        async () => {
+        async function() {
 
-            if (!window.tempComplaint) {
+            if (!tempComplaint) {
 
                 showToast(
-                    "Please analyze complaint first"
+                    "Analyze complaint first"
                 );
 
                 return;
 
             }
+
+
+            this.disabled = true;
+
+            this.textContent =
+                "Submitting...";
 
 
             try {
@@ -704,16 +840,19 @@ if (finalSubmit) {
                     await apiRequest(
                         "/complaints",
                         {
+
                             method: "POST",
 
                             headers: {
+
                                 "Content-Type":
                                     "application/json"
+
                             },
 
                             body:
                                 JSON.stringify(
-                                    window.tempComplaint
+                                    tempComplaint
                                 )
 
                         }
@@ -727,6 +866,8 @@ if (finalSubmit) {
                 document.getElementById(
                     "complaintId"
                 ).textContent =
+                    "Complaint ID: "
+                    +
                     complaint.id;
 
 
@@ -735,27 +876,60 @@ if (finalSubmit) {
                 );
 
 
+                document
+                    .getElementById(
+                        "complaintForm"
+                    )
+                    .reset();
+
+
+                document
+                    .getElementById(
+                        "aiResult"
+                    )
+                    .classList.add(
+                        "hidden"
+                    );
+
+
+                tempComplaint = null;
+
+                window.tempComplaint = null;
+
+
                 await loadComplaints();
 
 
-                openPage(
-                    "track"
-                );
+                setTimeout(() => {
+
+                    openPage("track");
 
 
-                document.getElementById(
-                    "trackId"
-                ).value =
-                    complaint.id;
+                    document.getElementById(
+                        "trackId"
+                    ).value =
+                        complaint.id;
 
 
-                trackComplaint();
+                    trackComplaint();
 
+                }, 700);
 
             }
             catch (error) {
 
-                console.error(error);
+                console.error(
+                    "Submit Error:",
+                    error
+                );
+
+            }
+            finally {
+
+                this.disabled = false;
+
+                this.textContent =
+                    "Submit Complaint";
 
             }
 
@@ -764,6 +938,330 @@ if (finalSubmit) {
 
 }
 
+
+// ==========================================
+// TRACKING
+// ==========================================
+
+const trackBtn =
+    document.getElementById(
+        "trackBtn"
+    );
+
+
+if (trackBtn) {
+
+    trackBtn.addEventListener(
+        "click",
+        trackComplaint
+    );
+
+}
+
+
+async function trackComplaint() {
+
+    const input =
+        document.getElementById(
+            "trackId"
+        );
+
+
+    if (!input) {
+        return;
+    }
+
+
+    const id =
+        input.value
+        .trim()
+        .toUpperCase();
+
+
+    if (!id) {
+
+        showToast(
+            "Enter complaint ID"
+        );
+
+        return;
+
+    }
+
+
+    const container =
+        document.getElementById(
+            "trackResult"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    container.innerHTML = `
+
+        <div class="panel">
+
+            Loading complaint...
+
+        </div>
+
+    `;
+
+
+    try {
+
+        const data =
+            await apiRequest(
+                `/complaints/${encodeURIComponent(id)}`
+            );
+
+
+        renderTracking(
+            data.complaint
+        );
+
+    }
+    catch (error) {
+
+        container.innerHTML = `
+
+            <div class="panel">
+
+                Complaint not found.
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+// ==========================================
+// TRACKING UI
+// ==========================================
+
+function renderTracking(complaint) {
+
+    const container =
+        document.getElementById(
+            "trackResult"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const history =
+        complaint.history || [];
+
+
+    container.innerHTML = `
+
+        <div class="track-card">
+
+
+            <div class="track-head">
+
+                <div>
+
+                    <h2>
+
+                        ${escapeHTML(
+                            complaint.title ||
+                            "Complaint"
+                        )}
+
+                    </h2>
+
+
+                    <div class="track-meta">
+
+                        ${escapeHTML(
+                            complaint.id ||
+                            ""
+                        )}
+
+                        <br>
+
+                        ${escapeHTML(
+                            complaint.category ||
+                            "Unknown"
+                        )}
+
+                        ·
+
+                        ${escapeHTML(
+                            complaint.department ||
+                            "Unknown"
+                        )}
+
+                        <br>
+
+                        ${escapeHTML(
+                            complaint.location ||
+                            "Location not provided"
+                        )}
+
+                    </div>
+
+                </div>
+
+
+                <div class="badges">
+
+                    <span
+                        class="priority ${String(
+                            complaint.priority ||
+                            "LOW"
+                        ).toLowerCase()}"
+                    >
+
+                        ${escapeHTML(
+                            complaint.priority ||
+                            "LOW"
+                        )}
+
+                    </span>
+
+
+                    <span class="status-badge">
+
+                        ${formatStatus(
+                            complaint.status ||
+                            "SUBMITTED"
+                        )}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <p class="track-meta">
+
+                ${escapeHTML(
+                    complaint.description ||
+                    ""
+                )}
+
+            </p>
+
+
+            ${
+                complaint.location
+
+                ?
+
+                `
+                    <br>
+
+                    <a
+                        class="ghost-btn"
+                        target="_blank"
+                        href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            complaint.location
+                        )}"
+                    >
+                        Open Location in Maps
+                    </a>
+                `
+
+                :
+
+                ""
+            }
+
+
+            <div class="timeline">
+
+                ${
+                    history.length === 0
+
+                    ?
+
+                    `
+                        <p class="track-meta">
+                            No status history available.
+                        </p>
+                    `
+
+                    :
+
+                    history
+                    .map(
+                        (item, index) => {
+
+                            const current =
+                                index ===
+                                history.length - 1
+                                    ? "current"
+                                    : "";
+
+
+                            return `
+
+                                <div
+                                    class="timeline-item ${current}"
+                                >
+
+                                    <div
+                                        class="timeline-dot"
+                                    ></div>
+
+
+                                    <strong>
+
+                                        ${formatStatus(
+                                            item.status
+                                        )}
+
+                                    </strong>
+
+
+                                    <p>
+
+                                        ${escapeHTML(
+                                            item.note ||
+                                            ""
+                                        )}
+
+                                    </p>
+
+
+                                    <small>
+
+                                        ${formatDate(
+                                            item.created_at
+                                        )}
+
+                                    </small>
+
+                                </div>
+
+                            `;
+
+                        }
+                    )
+                    .join("")
+
+                }
+
+            </div>
+
+
+        </div>
+
+    `;
+
+}
 
 
 // ==========================================
@@ -779,90 +1277,127 @@ function renderComplaints() {
 
 
     if (!container) {
-
         return;
-
     }
 
 
+    const searchInput =
+        document.getElementById(
+            "searchInput"
+        );
+
+
+    const statusSearch =
+        document.getElementById(
+            "statusSearch"
+        );
+
+
+    const prioritySearch =
+        document.getElementById(
+            "prioritySearch"
+        );
+
+
     const search =
-        document
-            .getElementById(
-                "searchInput"
-            )
-            .value
-            .toLowerCase()
-            .trim();
+        searchInput
+            ? searchInput.value
+                .toLowerCase()
+                .trim()
+            : "";
 
 
     const status =
-        document
-            .getElementById(
-                "statusSearch"
-            )
-            .value;
+        statusSearch
+            ? statusSearch.value
+            : "ALL";
 
 
     const priority =
-        document
-            .getElementById(
-                "prioritySearch"
-            )
-            .value;
+        prioritySearch
+            ? prioritySearch.value
+            : "ALL";
 
 
-    let data =
+    const data =
         complaints.filter(
             complaint => {
 
+                const title =
+                    String(
+                        complaint.title || ""
+                    )
+                    .toLowerCase();
+
+
+                const id =
+                    String(
+                        complaint.id || ""
+                    )
+                    .toLowerCase();
+
+
+                const category =
+                    String(
+                        complaint.category || ""
+                    )
+                    .toLowerCase();
+
+
+                const location =
+                    String(
+                        complaint.location || ""
+                    )
+                    .toLowerCase();
+
+
                 const matchesSearch =
 
-                    complaint.title
-                        .toLowerCase()
-                        .includes(search)
+                    title.includes(search)
 
                     ||
 
-                    complaint.id
-                        .toLowerCase()
-                        .includes(search)
+                    id.includes(search)
 
                     ||
 
-                    complaint.category
-                        .toLowerCase()
-                        .includes(search)
+                    category.includes(search)
 
                     ||
 
-                    (
-                        complaint.location
-                        || ""
-                    )
-                        .toLowerCase()
-                        .includes(search);
+                    location.includes(search);
 
 
                 const matchesStatus =
+
                     status === "ALL"
+
                     ||
-                    complaint.status
-                    === status;
+
+                    complaint.status === status;
 
 
                 const matchesPriority =
+
                     priority === "ALL"
+
                     ||
-                    complaint.priority
-                    === priority;
+
+                    complaint.priority === priority;
 
 
                 return (
+
                     matchesSearch
+
                     &&
+
                     matchesStatus
+
                     &&
+
                     matchesPriority
+
                 );
 
             }
@@ -871,10 +1406,15 @@ function renderComplaints() {
 
     if (data.length === 0) {
 
-        container.innerHTML =
-            `<div class="complaint-item">
+        container.innerHTML = `
+
+            <div class="complaint-item">
+
                 No complaints found.
-            </div>`;
+
+            </div>
+
+        `;
 
         return;
 
@@ -882,68 +1422,85 @@ function renderComplaints() {
 
 
     container.innerHTML =
-        data.map(
+        data
+        .map(
             complaint =>
                 complaintCard(
                     complaint
                 )
-        ).join("");
+        )
+        .join("");
 
 }
-
 
 
 // ==========================================
 // SEARCH LISTENERS
 // ==========================================
 
-document
-    .getElementById(
+const searchInput =
+    document.getElementById(
         "searchInput"
-    )
-    .addEventListener(
+    );
+
+
+if (searchInput) {
+
+    searchInput.addEventListener(
         "input",
         renderComplaints
     );
 
+}
 
-document
-    .getElementById(
+
+const statusSearch =
+    document.getElementById(
         "statusSearch"
-    )
-    .addEventListener(
+    );
+
+
+if (statusSearch) {
+
+    statusSearch.addEventListener(
         "change",
         renderComplaints
     );
 
+}
 
-document
-    .getElementById(
+
+const prioritySearch =
+    document.getElementById(
         "prioritySearch"
-    )
-    .addEventListener(
+    );
+
+
+if (prioritySearch) {
+
+    prioritySearch.addEventListener(
         "change",
         renderComplaints
     );
 
+}
 
 
 // ==========================================
 // ADMIN PAGE
-// LOGIN REMOVED
 // ==========================================
 
 function checkAdminPage() {
 
-    const login =
-        document.getElementById(
-            "adminLogin"
-        );
-
-
     const content =
         document.getElementById(
             "adminContent"
+        );
+
+
+    const login =
+        document.getElementById(
+            "adminLogin"
         );
 
 
@@ -952,6 +1509,9 @@ function checkAdminPage() {
             "adminAuthArea"
         );
 
+
+    // Login is removed.
+    // Admin page is directly accessible.
 
     if (login) {
 
@@ -985,7 +1545,6 @@ function checkAdminPage() {
 }
 
 
-
 // ==========================================
 // ADMIN ANALYTICS
 // ==========================================
@@ -1000,59 +1559,109 @@ async function loadAdminAnalytics() {
             );
 
 
-        document.getElementById(
-            "adminTotal"
-        ).textContent =
-            data.total;
+        const status =
+            data.status || {};
 
 
-        document.getElementById(
-            "adminPending"
-        ).textContent =
-
-            data.status.SUBMITTED
-            +
-            data.status.VERIFIED;
+        const adminTotal =
+            document.getElementById(
+                "adminTotal"
+            );
 
 
-        document.getElementById(
-            "adminProgress"
-        ).textContent =
-            data.status.IN_PROGRESS;
+        const adminPending =
+            document.getElementById(
+                "adminPending"
+            );
 
 
-        document.getElementById(
-            "adminResolved"
-        ).textContent =
-
-            data.status.RESOLVED
-            +
-            data.status.CLOSED;
+        const adminProgress =
+            document.getElementById(
+                "adminProgress"
+            );
 
 
-        document.getElementById(
-            "resolutionRate"
-        ).textContent =
-            data.resolution_rate
-            + "%";
+        const adminResolved =
+            document.getElementById(
+                "adminResolved"
+            );
 
 
-        document.getElementById(
-            "averageResolution"
-        ).textContent =
-            data.average_resolution_hours
-            + " hrs";
+        const resolutionRate =
+            document.getElementById(
+                "resolutionRate"
+            );
+
+
+        const averageResolution =
+            document.getElementById(
+                "averageResolution"
+            );
+
+
+        if (adminTotal) {
+
+            adminTotal.textContent =
+                data.total || 0;
+
+        }
+
+
+        if (adminPending) {
+
+            adminPending.textContent =
+                (status.SUBMITTED || 0)
+                +
+                (status.VERIFIED || 0);
+
+        }
+
+
+        if (adminProgress) {
+
+            adminProgress.textContent =
+                status.IN_PROGRESS || 0;
+
+        }
+
+
+        if (adminResolved) {
+
+            adminResolved.textContent =
+                (status.RESOLVED || 0)
+                +
+                (status.CLOSED || 0);
+
+        }
+
+
+        if (resolutionRate) {
+
+            resolutionRate.textContent =
+                (data.resolution_rate || 0)
+                + "%";
+
+        }
+
+
+        if (averageResolution) {
+
+            averageResolution.textContent =
+                (data.average_resolution_hours || 0)
+                + " hrs";
+
+        }
 
 
         renderMetrics(
             "adminCategories",
-            data.categories
+            data.categories || {}
         );
 
 
         renderMetrics(
             "adminDepartments",
-            data.departments
+            data.departments || {}
         );
 
     }
@@ -1066,7 +1675,6 @@ async function loadAdminAnalytics() {
     }
 
 }
-
 
 
 // ==========================================
@@ -1085,9 +1693,7 @@ function renderMetrics(
 
 
     if (!container) {
-
         return;
-
     }
 
 
@@ -1099,22 +1705,31 @@ function renderMetrics(
 
     if (entries.length === 0) {
 
-        container.innerHTML =
-            `<div class="metric-item">
-                <span>No data</span>
-            </div>`;
+        container.innerHTML = `
+
+            <div class="metric-item">
+
+                <span>
+                    No data
+                </span>
+
+            </div>
+
+        `;
 
         return;
 
     }
 
 
+    entries.sort(
+        (a, b) =>
+            b[1] - a[1]
+    );
+
+
     container.innerHTML =
         entries
-        .sort(
-            (a, b) =>
-                b[1] - a[1]
-        )
         .map(item => {
 
             return `
@@ -1122,13 +1737,17 @@ function renderMetrics(
                 <div class="metric-item">
 
                     <span>
+
                         ${escapeHTML(
                             item[0]
                         )}
+
                     </span>
 
                     <strong>
+
                         ${item[1]}
+
                     </strong>
 
                 </div>
@@ -1139,7 +1758,6 @@ function renderMetrics(
         .join("");
 
 }
-
 
 
 // ==========================================
@@ -1155,18 +1773,85 @@ function renderAdminComplaints() {
 
 
     if (!container) {
-
         return;
-
     }
 
 
-    if (complaints.length === 0) {
+    const filterElement =
+        document.getElementById(
+            "adminStatusFilter"
+        );
 
-        container.innerHTML =
-            `<div class="complaint-item">
-                No complaints yet.
-            </div>`;
+
+    const filter =
+        filterElement
+            ? filterElement.value
+            : "ALL";
+
+
+    let data =
+        complaints.filter(
+            complaint => {
+
+                return (
+
+                    filter === "ALL"
+
+                    ||
+
+                    complaint.status === filter
+
+                );
+
+            }
+        );
+
+
+    // ======================================
+    // PRIORITY SORT
+    // ======================================
+
+    const priorityOrder = {
+
+        "CRITICAL": 1,
+
+        "HIGH": 2,
+
+        "MEDIUM": 3,
+
+        "LOW": 4
+
+    };
+
+
+    data.sort(
+        (a, b) => {
+
+            return (
+
+                (priorityOrder[a.priority] || 5)
+
+                -
+
+                (priorityOrder[b.priority] || 5)
+
+            );
+
+        }
+    );
+
+
+    if (data.length === 0) {
+
+        container.innerHTML = `
+
+            <p class="track-meta">
+
+                No complaints found.
+
+            </p>
+
+        `;
 
         return;
 
@@ -1174,196 +1859,233 @@ function renderAdminComplaints() {
 
 
     container.innerHTML =
-        complaints.map(
-            complaint => {
-
-                return `
-
-                    <div
-                        class="admin-complaint"
-                    >
-
-                        <div
-                            class="admin-complaint-main"
-                        >
-
-                            <div>
-
-                                <h3>
-                                    ${escapeHTML(
-                                        complaint.title
-                                    )}
-                                </h3>
-
-                                <p
-                                    class="complaint-meta"
-                                >
-
-                                    ${escapeHTML(
-                                        complaint.id
-                                    )}
-
-                                    ·
-
-                                    ${escapeHTML(
-                                        complaint.category
-                                    )}
-
-                                    ·
-
-                                    ${escapeHTML(
-                                        complaint.department
-                                    )}
-
-                                </p>
-
-                            </div>
-
-
-                            <div
-                                class="badges"
-                            >
-
-                                <span
-                                    class="priority ${String(
-                                        complaint.priority
-                                    ).toLowerCase()}"
-                                >
-
-                                    ${escapeHTML(
-                                        complaint.priority
-                                    )}
-
-                                </span>
-
-
-                                <span
-                                    class="status-badge"
-                                >
-
-                                    ${formatStatus(
-                                        complaint.status
-                                    )}
-
-                                </span>
-
-                            </div>
-
-                        </div>
-
-
-                        <div
-                            class="admin-complaint-actions"
-                        >
-
-                            <select
-                                onchange="updateComplaintStatus(
-                                    '${complaint.id}',
-                                    this.value
-                                )"
-                            >
-
-                                <option
-                                    value="SUBMITTED"
-                                    ${
-                                        complaint.status
-                                        === "SUBMITTED"
-                                        ? "selected"
-                                        : ""
-                                    }
-                                >
-                                    Submitted
-                                </option>
-
-
-                                <option
-                                    value="VERIFIED"
-                                    ${
-                                        complaint.status
-                                        === "VERIFIED"
-                                        ? "selected"
-                                        : ""
-                                    }
-                                >
-                                    Verified
-                                </option>
-
-
-                                <option
-                                    value="IN_PROGRESS"
-                                    ${
-                                        complaint.status
-                                        === "IN_PROGRESS"
-                                        ? "selected"
-                                        : ""
-                                    }
-                                >
-                                    In Progress
-                                </option>
-
-
-                                <option
-                                    value="RESOLVED"
-                                    ${
-                                        complaint.status
-                                        === "RESOLVED"
-                                        ? "selected"
-                                        : ""
-                                    }
-                                >
-                                    Resolved
-                                </option>
-
-
-                                <option
-                                    value="CLOSED"
-                                    ${
-                                        complaint.status
-                                        === "CLOSED"
-                                        ? "selected"
-                                        : ""
-                                    }
-                                >
-                                    Closed
-                                </option>
-
-                            </select>
-
-
-                            <button
-                                class="ghost-btn"
-                                onclick="viewComplaint(
-                                    '${complaint.id}'
-                                )"
-                            >
-                                View
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                `;
-
-            }
-        ).join("");
+        data
+        .map(
+            complaint =>
+                adminComplaintCard(
+                    complaint
+                )
+        )
+        .join("");
 
 }
 
 
+// ==========================================
+// ADMIN COMPLAINT CARD
+// ==========================================
+
+function adminComplaintCard(
+    complaint
+) {
+
+    return `
+
+        <div class="admin-row">
+
+
+            <div class="admin-row-main">
+
+                <div>
+
+                    <h3>
+
+                        ${escapeHTML(
+                            complaint.title ||
+                            "Untitled Complaint"
+                        )}
+
+                    </h3>
+
+
+                    <p>
+
+                        ${escapeHTML(
+                            complaint.id ||
+                            ""
+                        )}
+
+                        ·
+
+                        ${escapeHTML(
+                            complaint.category ||
+                            "Unknown"
+                        )}
+
+                        ·
+
+                        ${escapeHTML(
+                            complaint.department ||
+                            "Unknown"
+                        )}
+
+                        <br>
+
+                        ${escapeHTML(
+                            complaint.location ||
+                            "No location"
+                        )}
+
+                    </p>
+
+                </div>
+
+
+                <div class="badges">
+
+                    <span
+                        class="priority ${String(
+                            complaint.priority ||
+                            "LOW"
+                        ).toLowerCase()}"
+                    >
+
+                        ${escapeHTML(
+                            complaint.priority ||
+                            "LOW"
+                        )}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-actions">
+
+
+                <select
+                    id="status-${escapeHTML(
+                        complaint.id
+                    )}"
+                >
+
+                    ${statusOption(
+                        "SUBMITTED",
+                        complaint.status
+                    )}
+
+                    ${statusOption(
+                        "VERIFIED",
+                        complaint.status
+                    )}
+
+                    ${statusOption(
+                        "IN_PROGRESS",
+                        complaint.status
+                    )}
+
+                    ${statusOption(
+                        "RESOLVED",
+                        complaint.status
+                    )}
+
+                    ${statusOption(
+                        "CLOSED",
+                        complaint.status
+                    )}
+
+                </select>
+
+
+                <button
+                    class="primary-btn"
+                    onclick="updateComplaintStatus('${escapeHTML(
+                        complaint.id
+                    )}')"
+                >
+
+                    Update
+
+                </button>
+
+
+                <button
+                    class="ghost-btn"
+                    onclick="trackFromAdmin('${escapeHTML(
+                        complaint.id
+                    )}')"
+                >
+
+                    View
+
+                </button>
+
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
 
 // ==========================================
-// UPDATE COMPLAINT STATUS
+// STATUS OPTION
+// ==========================================
+
+function statusOption(
+    value,
+    current
+) {
+
+    return `
+
+        <option
+            value="${value}"
+            ${
+                value === current
+                    ? "selected"
+                    : ""
+            }
+        >
+
+            ${formatStatus(value)}
+
+        </option>
+
+    `;
+
+}
+
+
+// ==========================================
+// UPDATE STATUS
 // ==========================================
 
 async function updateComplaintStatus(
-    complaintId,
-    newStatus
+    complaintId
 ) {
+
+    const select =
+        document.getElementById(
+            `status-${complaintId}`
+        );
+
+
+    if (!select) {
+
+        showToast(
+            "Status selector not found"
+        );
+
+        return;
+
+    }
+
+
+    const status =
+        select.value;
+
 
     const note =
         prompt(
-            "Enter a note for this status update:"
+            "Add status update note:",
+            `Status changed to ${formatStatus(
+                status
+            )}`
         );
 
 
@@ -1394,11 +2116,9 @@ async function updateComplaintStatus(
                 body:
                     JSON.stringify({
 
-                        status:
-                            newStatus,
+                        status,
 
-                        note:
-                            note
+                        note
 
                     })
 
@@ -1407,42 +2127,52 @@ async function updateComplaintStatus(
 
 
         showToast(
-            "Complaint status updated"
+            "Status updated successfully"
         );
 
 
         await loadComplaints();
 
-        checkAdminPage();
+        await loadAdminAnalytics();
+
+        renderAdminComplaints();
 
     }
     catch (error) {
 
-        console.error(error);
+        console.error(
+            "Status update error:",
+            error
+        );
 
     }
 
 }
 
 
-
 // ==========================================
-// VIEW COMPLAINT
+// TRACK FROM ADMIN
 // ==========================================
 
-function viewComplaint(
+function trackFromAdmin(
     complaintId
 ) {
 
-    openPage(
-        "track"
-    );
+    openPage("track");
 
 
-    document.getElementById(
-        "trackId"
-    ).value =
-        complaintId;
+    const trackInput =
+        document.getElementById(
+            "trackId"
+        );
+
+
+    if (trackInput) {
+
+        trackInput.value =
+            complaintId;
+
+    }
 
 
     trackComplaint();
@@ -1450,489 +2180,8 @@ function viewComplaint(
 }
 
 
-
 // ==========================================
-// TRACK COMPLAINT
-// ==========================================
-
-const trackBtn =
-    document.getElementById(
-        "trackBtn"
-    );
-
-
-if (trackBtn) {
-
-    trackBtn.addEventListener(
-        "click",
-        trackComplaint
-    );
-
-}
-
-
-async function trackComplaint() {
-
-    const input =
-        document.getElementById(
-            "trackId"
-        );
-
-
-    const result =
-        document.getElementById(
-            "trackResult"
-        );
-
-
-    if (!input || !result) {
-
-        return;
-
-    }
-
-
-    const complaintId =
-        input.value
-            .trim();
-
-
-    if (!complaintId) {
-
-        showToast(
-            "Enter complaint ID"
-        );
-
-        return;
-
-    }
-
-
-    try {
-
-        const data =
-            await loadComplaintDetails(
-                complaintId
-            );
-
-
-        if (!data) {
-
-            result.innerHTML =
-                `<div class="panel">
-                    <h3>Complaint not found</h3>
-                    <p>Please check the complaint ID.</p>
-                </div>`;
-
-            return;
-
-        }
-
-
-        const history =
-            data.history || [];
-
-
-        result.innerHTML = `
-
-            <div class="panel">
-
-                <div class="panel-heading">
-
-                    <div>
-
-                        <p class="eyebrow">
-                            COMPLAINT DETAILS
-                        </p>
-
-                        <h2>
-                            ${escapeHTML(
-                                data.id
-                            )}
-                        </h2>
-
-                    </div>
-
-
-                    <span class="status-badge">
-                        ${formatStatus(
-                            data.status
-                        )}
-                    </span>
-
-                </div>
-
-
-                <div class="result-grid">
-
-                    <div>
-
-                        <span>
-                            Title
-                        </span>
-
-                        <strong>
-                            ${escapeHTML(
-                                data.title
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            Category
-                        </span>
-
-                        <strong>
-                            ${escapeHTML(
-                                data.category
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            Department
-                        </span>
-
-                        <strong>
-                            ${escapeHTML(
-                                data.department
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            Priority
-                        </span>
-
-                        <strong>
-                            ${escapeHTML(
-                                data.priority
-                            )}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="track-description">
-
-                    <h3>
-                        Description
-                    </h3>
-
-                    <p>
-                        ${escapeHTML(
-                            data.description
-                        )}
-                    </p>
-
-                </div>
-
-
-                <div class="track-description">
-
-                    <h3>
-                        Location
-                    </h3>
-
-                    <p>
-                        ${escapeHTML(
-                            data.location
-                            || "Location not provided"
-                        )}
-                    </p>
-
-                </div>
-
-
-                <div class="track-history">
-
-                    <h3>
-                        Complaint History
-                    </h3>
-
-                    ${
-                        history.length === 0
-                        ?
-                        `
-                            <p>
-                                No history available.
-                            </p>
-                        `
-                        :
-                        history.map(
-                            item => `
-                                <div class="history-item">
-
-                                    <div>
-
-                                        <strong>
-                                            ${formatStatus(
-                                                item.status
-                                            )}
-                                        </strong>
-
-                                        <p>
-                                            ${escapeHTML(
-                                                item.note
-                                                || ""
-                                            )}
-                                        </p>
-
-                                    </div>
-
-                                    <span>
-                                        ${formatDate(
-                                            item.created_at
-                                        )}
-                                    </span>
-
-                                </div>
-                            `
-                        ).join("")
-                    }
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-    catch (error) {
-
-        console.error(
-            error
-        );
-
-    }
-
-}
-
-
-
-// ==========================================
-// STATUS FORMATTER
-// ==========================================
-
-function formatStatus(status) {
-
-    if (!status) {
-
-        return "Unknown";
-
-    }
-
-
-    return status
-        .replaceAll(
-            "_",
-            " "
-        )
-        .toLowerCase()
-        .replace(
-            /\b\w/g,
-            char =>
-                char.toUpperCase()
-        );
-
-}
-
-
-
-// ==========================================
-// DATE FORMATTER
-// ==========================================
-
-function formatDate(dateString) {
-
-    if (!dateString) {
-
-        return "";
-
-    }
-
-
-    const date =
-        new Date(
-            dateString
-        );
-
-
-    if (isNaN(date.getTime())) {
-
-        return dateString;
-
-    }
-
-
-    return date.toLocaleString(
-        "en-IN",
-        {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
-        }
-    );
-
-}
-
-
-
-// ==========================================
-// ESCAPE HTML
-// ==========================================
-
-function escapeHTML(value) {
-
-    if (
-        value === null
-        ||
-        value === undefined
-    ) {
-
-        return "";
-
-    }
-
-
-    return String(value)
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-
-}
-
-
-
-// ==========================================
-// COMPLAINT DETAILS
-// ==========================================
-
-async function loadComplaintDetails(
-    complaintId
-) {
-
-    try {
-
-        const data =
-            await apiRequest(
-                `/complaints/${encodeURIComponent(
-                    complaintId
-                )}`
-            );
-
-
-        return data.complaint;
-
-    }
-    catch (error) {
-
-        console.error(
-            error
-        );
-
-        return null;
-
-    }
-
-}
-
-
-
-// ==========================================
-// ADMIN SEARCH
-// ==========================================
-
-const adminSearch =
-    document.getElementById(
-        "adminSearch"
-    );
-
-
-if (adminSearch) {
-
-    adminSearch.addEventListener(
-        "input",
-        function() {
-
-            const search =
-                this.value
-                    .toLowerCase()
-                    .trim();
-
-
-            const items =
-                document.querySelectorAll(
-                    ".admin-complaint"
-                );
-
-
-            items.forEach(item => {
-
-                const text =
-                    item.textContent
-                        .toLowerCase();
-
-
-                if (
-                    text.includes(search)
-                ) {
-
-                    item.style.display =
-                        "";
-
-                }
-                else {
-
-                    item.style.display =
-                        "none";
-
-                }
-
-            });
-
-        }
-    );
-
-}
-
-
-
-// ==========================================
-// STATUS FILTER - ADMIN
+// ADMIN FILTER
 // ==========================================
 
 const adminStatusFilter =
@@ -1945,237 +2194,92 @@ if (adminStatusFilter) {
 
     adminStatusFilter.addEventListener(
         "change",
-        function() {
-
-            const selected =
-                this.value;
-
-
-            const items =
-                document.querySelectorAll(
-                    ".admin-complaint"
-                );
-
-
-            items.forEach(item => {
-
-                if (
-                    selected === "ALL"
-                    ||
-                    item.textContent
-                        .includes(
-                            formatStatus(
-                                selected
-                            )
-                        )
-                ) {
-
-                    item.style.display =
-                        "";
-
-                }
-                else {
-
-                    item.style.display =
-                        "none";
-
-                }
-
-            });
-
-        }
+        renderAdminComplaints
     );
 
 }
-
 
 
 // ==========================================
-// NAVIGATION BUTTONS
+// UTILITY - FORMAT STATUS
 // ==========================================
 
-const homeBtn =
-    document.getElementById(
-        "homeBtn"
-    );
+function formatStatus(status) {
 
-
-if (homeBtn) {
-
-    homeBtn.addEventListener(
-        "click",
-        () => {
-
-            openPage(
-                "home"
-            );
-
-        }
-    );
-
-}
-
-
-const reportBtn =
-    document.getElementById(
-        "reportBtn"
-    );
-
-
-if (reportBtn) {
-
-    reportBtn.addEventListener(
-        "click",
-        () => {
-
-            openPage(
-                "report"
-            );
-
-        }
-    );
-
-}
-
-
-const trackNavBtn =
-    document.getElementById(
-        "trackNavBtn"
-    );
-
-
-if (trackNavBtn) {
-
-    trackNavBtn.addEventListener(
-        "click",
-        () => {
-
-            openPage(
-                "track"
-            );
-
-        }
-    );
-
-}
-
-
-const complaintsNavBtn =
-    document.getElementById(
-        "complaintsNavBtn"
-    );
-
-
-if (complaintsNavBtn) {
-
-    complaintsNavBtn.addEventListener(
-        "click",
-        () => {
-
-            openPage(
-                "complaints"
-            );
-
-        }
-    );
-
-}
-
-
-const adminNavBtn =
-    document.getElementById(
-        "adminNavBtn"
-    );
-
-
-if (adminNavBtn) {
-
-    adminNavBtn.addEventListener(
-        "click",
-        () => {
-
-            openPage(
-                "admin"
-            );
-
-        }
-    );
-
-}
-
-
-
-// ==========================================
-// BACK TO HOME BUTTONS
-// ==========================================
-
-document
-    .querySelectorAll(
-        "[data-home]"
+    return String(
+        status || ""
     )
-    .forEach(button => {
+    .replaceAll(
+        "_",
+        " "
+    );
 
-        button.addEventListener(
-            "click",
-            () => {
+}
 
-                openPage(
-                    "home"
-                );
+
+// ==========================================
+// UTILITY - FORMAT DATE
+// ==========================================
+
+function formatDate(date) {
+
+    if (!date) {
+
+        return "";
+
+    }
+
+
+    try {
+
+        return new Date(
+            date
+        ).toLocaleString(
+            "en-IN",
+            {
+
+                dateStyle: "medium",
+
+                timeStyle: "short"
 
             }
         );
 
-    });
+    }
+    catch (error) {
 
+        return "";
+
+    }
+
+}
 
 
 // ==========================================
-// REPORT RESET
+// UTILITY - ESCAPE HTML
 // ==========================================
 
-const resetComplaintBtn =
-    document.getElementById(
-        "resetComplaint"
-    );
+function escapeHTML(text) {
 
+    return String(
+        text || ""
+    ).replace(
+        /[&<>"']/g,
+        function(char) {
 
-if (resetComplaintBtn) {
+            return {
 
-    resetComplaintBtn.addEventListener(
-        "click",
-        () => {
+                "&": "&amp;",
 
-            const form =
-                document.getElementById(
-                    "complaintForm"
-                );
+                "<": "&lt;",
 
+                ">": "&gt;",
 
-            if (form) {
+                '"': "&quot;",
 
-                form.reset();
+                "'": "&#039;"
 
-            }
-
-
-            const result =
-                document.getElementById(
-                    "aiResult"
-                );
-
-
-            if (result) {
-
-                result.classList.add(
-                    "hidden"
-                );
-
-            }
-
-
-            window.tempComplaint =
-                null;
+            }[char];
 
         }
     );
@@ -2183,289 +2287,10 @@ if (resetComplaintBtn) {
 }
 
 
-
 // ==========================================
-// LOCATION BUTTON
-// ==========================================
-
-const locationBtn =
-    document.getElementById(
-        "useLocation"
-    );
-
-
-if (locationBtn) {
-
-    locationBtn.addEventListener(
-        "click",
-        () => {
-
-            if (
-                !navigator.geolocation
-            ) {
-
-                showToast(
-                    "Location is not supported"
-                );
-
-                return;
-
-            }
-
-
-            locationBtn.disabled =
-                true;
-
-
-            locationBtn.textContent =
-                "Getting location...";
-
-
-            navigator
-                .geolocation
-                .getCurrentPosition(
-
-                    position => {
-
-                        const latitude =
-                            position.coords.latitude;
-
-
-                        const longitude =
-                            position.coords.longitude;
-
-
-                        const locationInput =
-                            document.getElementById(
-                                "location"
-                            );
-
-
-                        if (
-                            locationInput
-                        ) {
-
-                            locationInput.value =
-                                `${latitude}, ${longitude}`;
-
-                        }
-
-
-                        locationBtn.disabled =
-                            false;
-
-
-                        locationBtn.textContent =
-                            "Use My Location";
-
-
-                        showToast(
-                            "Location added"
-                        );
-
-                    },
-
-
-                    error => {
-
-                        console.error(
-                            error
-                        );
-
-
-                        locationBtn.disabled =
-                            false;
-
-
-                        locationBtn.textContent =
-                            "Use My Location";
-
-
-                        showToast(
-                            "Unable to get location"
-                        );
-
-                    }
-
-                );
-
-        }
-    );
-
-}
-
-
-
-// ==========================================
-// SMOOTH SCROLL
-// ==========================================
-
-document
-    .querySelectorAll(
-        'a[href^="#"]'
-    )
-    .forEach(link => {
-
-        link.addEventListener(
-            "click",
-            function(event) {
-
-                const target =
-                    document.querySelector(
-                        this.getAttribute(
-                            "href"
-                        )
-                    );
-
-
-                if (target) {
-
-                    event.preventDefault();
-
-
-                    target.scrollIntoView(
-                        {
-                            behavior:
-                                "smooth"
-                        }
-                    );
-
-                }
-
-            }
-        );
-
-    });
-
-
-
-// ==========================================
-// ENTER KEY - TRACKING
-// ==========================================
-
-const trackInput =
-    document.getElementById(
-        "trackId"
-    );
-
-
-if (trackInput) {
-
-    trackInput.addEventListener(
-        "keydown",
-        function(event) {
-
-            if (
-                event.key === "Enter"
-            ) {
-
-                event.preventDefault();
-
-                trackComplaint();
-
-            }
-
-        }
-    );
-
-}
-
-
-
-// ==========================================
-// THEME TOGGLE
-// ==========================================
-
-const themeToggle =
-    document.getElementById(
-        "themeToggle"
-    );
-
-
-if (themeToggle) {
-
-    themeToggle.addEventListener(
-        "click",
-        () => {
-
-            document.body.classList.toggle(
-                "light-theme"
-            );
-
-
-            const isLight =
-                document.body.classList.contains(
-                    "light-theme"
-                );
-
-
-            localStorage.setItem(
-                "codo_theme",
-                isLight
-                    ? "light"
-                    : "dark"
-            );
-
-        }
-    );
-
-}
-
-
-
-// ==========================================
-// LOAD SAVED THEME
-// ==========================================
-
-const savedTheme =
-    localStorage.getItem(
-        "codo_theme"
-    );
-
-
-if (
-    savedTheme === "light"
-) {
-
-    document.body.classList.add(
-        "light-theme"
-    );
-
-}
-
-
-
-// ==========================================
-// INITIAL PAGE
-// ==========================================
-
-openPage(
-    "home"
-);
-
-
-
-// ==========================================
-// INITIAL DATA LOAD
-// ==========================================
-
-loadComplaints();
-
-
-
-// ==========================================
-// INITIAL ADMIN DASHBOARD
-// LOGIN NOT REQUIRED
+// INITIAL LOAD
 // ==========================================
 
 checkAdminPage();
 
-
-
-// ==========================================
-// CONSOLE MESSAGE
-// ==========================================
-
-console.log(
-    "Codo Slayer frontend loaded successfully."
-);
+loadComplaints();
