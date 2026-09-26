@@ -28,7 +28,6 @@ from ai_engine import analyze_complaint
 from datetime import datetime
 
 
-
 # ==========================================
 # APP
 # ==========================================
@@ -57,13 +56,12 @@ app.add_middleware(
 
     allow_origins=["*"],
 
-    allow_credentials=True,
+    allow_credentials=False,
 
     allow_methods=["*"],
 
     allow_headers=["*"]
 )
-
 
 
 # ==========================================
@@ -105,8 +103,6 @@ class StatusRequest(BaseModel):
     note: str = ""
 
 
-
-
 # ==========================================
 # HOME
 # ==========================================
@@ -121,7 +117,6 @@ def home():
         "version": "2.0"
 
     }
-
 
 
 # ==========================================
@@ -177,14 +172,18 @@ def create_complaint(
     )
 
 
-    # Get latest ID number
+    # ======================================
+    # GET LATEST ID NUMBER
+    # ======================================
 
     latest = (
 
         db.query(Complaint)
 
         .order_by(
+
             Complaint.id.desc()
+
         )
 
         .first()
@@ -564,9 +563,11 @@ def update_status(
 
         status=request.status,
 
-        note=request.note
-        or
-        f"Status changed to {request.status}",
+        note=(
+            request.note
+            or
+            f"Status changed to {request.status}"
+        ),
 
         created_at=now
 
@@ -609,70 +610,108 @@ def analytics(
 ):
 
     total = db.query(
+
         Complaint
+
     ).count()
 
 
     submitted = db.query(
+
         Complaint
+
     ).filter(
+
         Complaint.status == "SUBMITTED"
+
     ).count()
 
 
     verified = db.query(
+
         Complaint
+
     ).filter(
+
         Complaint.status == "VERIFIED"
+
     ).count()
 
 
     in_progress = db.query(
+
         Complaint
+
     ).filter(
+
         Complaint.status == "IN_PROGRESS"
+
     ).count()
 
 
     resolved = db.query(
+
         Complaint
+
     ).filter(
+
         Complaint.status == "RESOLVED"
+
     ).count()
 
 
     closed = db.query(
+
         Complaint
+
     ).filter(
+
         Complaint.status == "CLOSED"
+
     ).count()
 
 
     critical = db.query(
+
         Complaint
+
     ).filter(
+
         Complaint.priority == "CRITICAL"
+
     ).count()
 
 
     high = db.query(
+
         Complaint
+
     ).filter(
+
         Complaint.priority == "HIGH"
+
     ).count()
 
 
     medium = db.query(
+
         Complaint
+
     ).filter(
+
         Complaint.priority == "MEDIUM"
+
     ).count()
 
 
     low = db.query(
+
         Complaint
+
     ).filter(
+
         Complaint.priority == "LOW"
+
     ).count()
 
 
@@ -687,7 +726,9 @@ def analytics(
         )
 
         .group_by(
+
             Complaint.category
+
         )
 
         .all()
@@ -706,13 +747,19 @@ def analytics(
         )
 
         .group_by(
+
             Complaint.department
+
         )
 
         .all()
 
     )
 
+
+    # ======================================
+    # RESOLUTION RATE
+    # ======================================
 
     resolution_rate = 0
 
@@ -722,8 +769,15 @@ def analytics(
         resolution_rate = round(
 
             (
-                (resolved + closed)
-                / total
+
+                (
+                    resolved
+                    +
+                    closed
+                )
+                /
+                total
+
             ) * 100,
 
             1
@@ -740,8 +794,9 @@ def analytics(
         db.query(Complaint)
 
         .filter(
-            Complaint.resolved_at
-            != None
+
+            Complaint.resolved_at != None
+
         )
 
         .all()
@@ -762,7 +817,8 @@ def analytics(
             difference = (
 
                 complaint.resolved_at
-                - complaint.created_at
+                -
+                complaint.created_at
 
             )
 
@@ -770,7 +826,8 @@ def analytics(
             total_hours += (
 
                 difference.total_seconds()
-                / 3600
+                /
+                3600
 
             )
 
@@ -778,7 +835,8 @@ def analytics(
         average_resolution_hours = round(
 
             total_hours
-            / len(resolved_complaints),
+            /
+            len(resolved_complaints),
 
             2
 

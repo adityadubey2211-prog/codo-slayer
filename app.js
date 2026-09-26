@@ -1,30 +1,18 @@
 // ==========================================
 // CODO SLAYER - FRONTEND
 // ==========================================
-
 const API_URL = "https://codo-slayer.onrender.com";
-
 let complaints = [];
-
-
-
 // ==========================================
 // PAGE NAVIGATION
 // ==========================================
-
 document.querySelectorAll("[data-page]").forEach(button => {
-
     button.addEventListener("click", () => {
-
         openPage(
             button.dataset.page
         );
-
     });
-
 });
-
-
 function openPage(pageName) {
 
     document
@@ -39,98 +27,54 @@ function openPage(pageName) {
     const page = document.getElementById(
         pageName
     );
-
-
     if (page) {
-
         page.classList.add("active");
-
     }
-
-
     document
         .querySelectorAll(".nav-btn")
         .forEach(button => {
-
             button.classList.remove("active");
-
             if (
                 button.dataset.page
                 === pageName
             ) {
-
                 button.classList.add("active");
-
             }
-
         });
-
-
     if (pageName === "complaints") {
-
         renderComplaints();
-
     }
-
-
     if (pageName === "admin") {
-
         checkAdminPage();
-
     }
-
 }
-
-
-
 // ==========================================
 // TOAST
 // ==========================================
-
 function showToast(message) {
-
     const toast =
         document.getElementById("toast");
-
-
     toast.textContent = message;
-
     toast.classList.add("show");
-
-
     setTimeout(() => {
-
         toast.classList.remove("show");
-
     }, 2500);
-
 }
-
-
-
 // ==========================================
 // API HELPER
 // ==========================================
-
 async function apiRequest(
     url,
     options = {}
 ) {
-
     try {
-
         const response = await fetch(
             API_URL + url,
             options
         );
-
-
         const data =
             await response.json();
-
-
         if (!response.ok) {
-
             throw new Error(
                 data.detail
                 || "Request failed"
